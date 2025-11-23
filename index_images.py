@@ -1,4 +1,3 @@
-# index_images.py
 import os
 import glob
 from PIL import Image
@@ -33,3 +32,4 @@ def build_database():
 
 if __name__ == "__main__":
     build_database()
+
