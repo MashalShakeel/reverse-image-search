@@ -3,7 +3,6 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-
 from embed import compute_embedding
 from search import search_top_k
 from db import IMAGE_DIR, save_embedding, load_all_embeddings
@@ -15,33 +14,30 @@ def list_images(folder):
         files.extend(glob.glob(os.path.join(folder, f"**/*{e}"), recursive=True))
     return sorted(files)
 
-# Build DB on first run
-def build_database():
+def build_database(model_type="resnet50"):
     paths = list_images(IMAGE_DIR)
     print("Found images:", len(paths))
 
     for p in paths:
         img = Image.open(p).convert("RGB")
-        vec = compute_embedding(img)
+        vec = compute_embedding(img, model_type=model_type)
         save_embedding(p, vec)
 
-    print("Database updated!")
+    print(f"Database updated! (Embeddings using {model_type})")
 
-# Query demo
-def search_demo(query_image_path, top_k=5):
+
+def search_demo(query_image_path, model_type="resnet50", top_k=5):
     q_img = Image.open(query_image_path).convert("RGB")
-    q_vec = compute_embedding(q_img)
+    q_vec = compute_embedding(q_img, model_type=model_type)
 
     docs = load_all_embeddings()
     all_vecs = [np.array(d["embedding"], dtype="float32") for d in docs]
     all_paths = [d["path"] for d in docs]
 
     idxs, scores = search_top_k(q_vec, all_vecs, k=top_k)
-
     result_paths = [all_paths[i] for i in idxs]
 
     plt.figure(figsize=(12, 6))
-
     plt.subplot(2, top_k, 1)
     plt.imshow(q_img)
     plt.title("Query")
@@ -54,19 +50,23 @@ def search_demo(query_image_path, top_k=5):
         plt.axis("off")
 
     plt.show()
-
     print("Results:", list(zip(result_paths, scores)))
 
+
 if __name__ == "__main__":
-    build_database()
+    while True:
+        model_type = input("Select embedding model ('resnet50' or 'hist'): ").strip().lower()
+        if model_type in ("resnet50", "hist"):
+            break
+        print("Invalid choice. Please type 'resnet50' or 'hist'.")
+
+    build_database(model_type=model_type)
 
     all_images = list_images(IMAGE_DIR)
-
     from collections import defaultdict
     cat_dict = defaultdict(list)
     for path in all_images:
         name = os.path.basename(path)
-        # extracting prefix: letters before first digit, ignoring extension
         base = os.path.splitext(name)[0]
         prefix = ''.join(c for c in base if not c.isdigit()).rstrip('_.')
         cat_dict[prefix.lower()].append(path)
@@ -84,4 +84,4 @@ if __name__ == "__main__":
             break
         print("Category not found. Please enter one of the available categories.")
 
-    search_demo(query_path, top_k=5)
+    search_demo(query_path, model_type=model_type, top_k=5)
