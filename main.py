@@ -58,24 +58,30 @@ def search_demo(query_image_path, top_k=5):
     print("Results:", list(zip(result_paths, scores)))
 
 if __name__ == "__main__":
-    # Build the database
     build_database()
 
-    # List all images
     all_images = list_images(IMAGE_DIR)
-    print("\nImages available in folder:")
-    for i, img_path in enumerate(all_images, start=1):
-        print(f"{i}. {os.path.basename(img_path)}")
 
-    # Ask user to pick one by name
+    from collections import defaultdict
+    cat_dict = defaultdict(list)
+    for path in all_images:
+        name = os.path.basename(path)
+        # extracting prefix: letters before first digit, ignoring extension
+        base = os.path.splitext(name)[0]
+        prefix = ''.join(c for c in base if not c.isdigit()).rstrip('_.')
+        cat_dict[prefix.lower()].append(path)
+
+    categories = sorted(cat_dict.keys())
+    print("\nAvailable categories:")
+    for cat in categories:
+        print(f"- {cat} ({len(cat_dict[cat])} images)")
+
     while True:
-        img_name = input("\nEnter the filename (WITH EXTENSION e.g. cat1.jpg) of the query image: ").strip()
-        query_path = os.path.join(IMAGE_DIR, img_name)
-        if os.path.exists(query_path):
+        chosen_cat = input("\nEnter a category for the query image: ").strip().lower()
+        if chosen_cat in cat_dict:
+            query_path = cat_dict[chosen_cat][0]
+            print(f"Selected query image: {os.path.basename(query_path)}")
             break
-        print("File not found. Please enter a valid filename (WITH EXTENSION) from the list above.")
+        print("Category not found. Please enter one of the available categories.")
 
-    # Run the search
     search_demo(query_path, top_k=5)
-
-
