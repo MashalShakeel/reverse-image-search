@@ -1,4 +1,3 @@
-# main.py
 import os
 import glob
 import numpy as np
@@ -70,12 +69,13 @@ if __name__ == "__main__":
 
     # Ask user to pick one by name
     while True:
-        img_name = input("\nEnter the filename of the query image: ").strip()
+        img_name = input("\nEnter the filename (WITH EXTENSION e.g. cat1.jpg) of the query image: ").strip()
         query_path = os.path.join(IMAGE_DIR, img_name)
         if os.path.exists(query_path):
             break
-        print("File not found. Please enter a valid filename from the list above.")
+        print("File not found. Please enter a valid filename (WITH EXTENSION) from the list above.")
 
     # Run the search
     search_demo(query_path, top_k=5)
+
 
