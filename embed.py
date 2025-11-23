@@ -1,9 +1,8 @@
-# embed.py
 import torch
 from torchvision import models, transforms
 from PIL import Image
 
-# Load pretrained ResNet50 once
+# loading pretrained ResNet50 once
 _model = None
 _transform = None
 
@@ -31,3 +30,4 @@ def compute_embedding(img: Image.Image):
     with torch.no_grad():
         vec = model(tensor).squeeze().numpy()  # shape 2048
     return vec
+
